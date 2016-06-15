@@ -36,18 +36,18 @@ except ImportError:
 
 # Config
 # set this to the default remote to use in repo
-default_rem = "omnirom"
+default_rem = "type-1a"
 # set this to the default revision to use (branch/tag name)
 default_rev = "android-6.0"
 # set this to the remote that you use for projects from your team repos
 # example fetch="https://github.com/omnirom"
-default_team_rem = "omnirom"
+default_team_rem = "type-1a"
 # this shouldn't change unless google makes changes
 local_manifest_dir = ".repo/local_manifests"
 # change this to your name on github (or equivalent hosting)
-android_team = "omnirom"
-# url to gerrit repository
-gerrit_url = "gerrit.omnirom.org"
+android_team = "type-1a"
+# url to github repository
+github_url = "https://github.com/Type-1a"
 
 
 def check_repo_exists(git_data, device):
@@ -60,10 +60,10 @@ def check_repo_exists(git_data, device):
     return git_data[matches[0]]
 
 
-def search_gerrit_for_device(device):
+def search_github_for_device(device):
     # TODO: In next gerrit release regex search with r= should be supported!
-    git_search_url = "https://{gerrit_url}/projects/?m={device}".format(
-        gerrit_url=gerrit_url,
+    git_search_url = "https://{github_url}/projects/?m={device}".format(
+        github_url=github_url,
         device=device
     )
     git_req = urllib.request.Request(git_search_url)
@@ -207,7 +207,7 @@ def parse_device_from_folder(device):
 
 
 def parse_dependency_file(location):
-    dep_file = "omni.dependencies"
+    dep_file = "type-1a.dependencies"
     dep_location = '/'.join([location, dep_file])
     if not os.path.isfile(dep_location):
         print("WARNING: %s file not found" % dep_location)
@@ -268,7 +268,7 @@ def create_dependency_manifest(dependencies):
 
 
 def create_common_dependencies_manifest(dependencies):
-    dep_file = "omni.dependencies"
+    dep_file = "type-1a.dependencies"
     common_list = []
     if dependencies is not None:
         for dependency in dependencies:
@@ -317,7 +317,7 @@ def check_device_exists(device):
 def fetch_device(device):
     if check_device_exists(device):
         print("WARNING: Trying to fetch a device that's already there")
-    git_data = search_gerrit_for_device(device)
+    git_data = search_github_for_device(device)
     if git_data is not None:
         device_url = git_data['id']
         device_dir = parse_device_directory(device_url, device)

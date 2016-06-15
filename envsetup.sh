@@ -69,8 +69,8 @@ function check_product()
         return
     fi
 
-    if (echo -n $1 | grep -q -e "^omni_") ; then
-       CUSTOM_BUILD=$(echo -n $1 | sed -e 's/^omni_//g')
+    if (echo -n $1 | grep -q -e "^type-1a_") ; then
+       CUSTOM_BUILD=$(echo -n $1 | sed -e 's/^type-1a_//g')
     else
        CUSTOM_BUILD=
     fi
@@ -516,7 +516,7 @@ function breakfast()
     CUSTOM_DEVICES_ONLY="true"
     unset LUNCH_MENU_CHOICES
     add_lunch_combo full-eng
-    for f in `/bin/ls vendor/omni/vendorsetup.sh 2> /dev/null`
+    for f in `/bin/ls vendor/type-1a/vendorsetup.sh 2> /dev/null`
         do
             echo "including $f"
             . $f
@@ -532,11 +532,11 @@ function breakfast()
             # A buildtype was specified, assume a full device name
             lunch $target
         else
-            # This is probably just the omni model name
+            # This is probably just the type-1a model name
             if [ -z "$variant" ]; then
                 variant="userdebug"
             fi
-            lunch omni_$target-$variant
+            lunch type-1a_$target-$variant
         fi
     fi
     return $?
@@ -1520,11 +1520,11 @@ function set_java_home() {
     fi
 }
 
-function repopick() {
-    set_stuff_for_environment
-    T=$(gettop)
-    $T/build/tools/repopick.py $@
-}
+#function repopick() {
+#    set_stuff_for_environment
+#    T=$(gettop)
+#    $T/build/tools/repopick.py $@
+#}
 
 
 # Print colored exit condition

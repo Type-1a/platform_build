@@ -632,16 +632,17 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
     script.Print("Formatting /data")
     script.FormatPartition("/data", OPTIONS.mount_by_label)
 
-  script.Print("#######################################");
-  script.Print("# _____            __  __  ______     #");
-  script.Print("#/\  __`\  /'\_/`\/\ \/\ \/\__  _\    #");
-  script.Print("#\ \ \/\ \/\  ``  \ \ ` \ \/_/\ \/    #");
-  script.Print("# \ \ \ \ \ \ \__\ \ \ . ` \ \ \ \    #");
-  script.Print("#  \ \ \_\ \ \ \_/\ \ \ \`\ \ \_\ \__ #");
-  script.Print("#   \ \_____\ \_\, \_\ \_\ \_\/\_____\#");
-  script.Print("#    \/_____/\/_/ \/_/\/_/\/_/\/_____/#");
-  script.Print("#                                     #");
-  script.Print("#######################################");
+  script.Print("#########################################");
+  script.Print("#            ) (                        #");
+  script.Print("#   *   ) ( /( )\ )          )   (      #");
+  script.Print("# ` )  /( )\()(()/((      ( /(   )\     #");
+  script.Print("#  ( )(_)((_)\ /(_))\ ___ )\()((((_)(   #");
+  script.Print("# (_(_()__ ((_(_))((_|___((_)\ )\ _ )\  #");
+  script.Print("# |_   _\ \ / | _ | __|   / (_)(_)_\(_) #");
+  script.Print("#   | |  \ V /|  _| _|    | |   / _ \   #");
+  script.Print("#   |_|   |_| |_| |___|   |_|  /_/ \_\  #");
+  script.Print("#                                       #");
+  script.Print("#########################################");
 
   system_progress = 0.75
 
@@ -729,7 +730,7 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   script.WriteRawImage(bootpartition, "boot.img")
 
   script.ShowProgress(0.1, 0)
-  script.Print("Enjoy OMNI ROM!");
+  script.Print("Enjoy TYPE-1A !!");
   device_specific.FullOTA_InstallEnd()
 
   if OPTIONS.extra_script is not None:
