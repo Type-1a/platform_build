@@ -225,10 +225,10 @@ def LoadRecoveryFSTab(read_helper, fstab_version):
       if not line or line.startswith("#"):
         continue
       pieces = line.split()
-      if not 3 <= len(pieces) <= 4:
+      if not (3 <= len(pieces) <= 7):
         raise ValueError("malformed recovery.fstab line: \"%s\"" % (line,))
       options = None
-      if len(pieces) >= 4:
+      if len(pieces) >= 4 and pieces[3] != 'NULL':
         if pieces[3].startswith("/"):
           device2 = pieces[3]
           if len(pieces) >= 5:
@@ -421,7 +421,14 @@ def GetBootableImage(name, prebuilt_name, unpack_dir, tree_subdir,
   otherwise construct it from the source files in
   'unpack_dir'/'tree_subdir'."""
 
-  prebuilt_path = os.path.join(unpack_dir, "BOOTABLE_IMAGES", prebuilt_name)
+  prebuilt_dir = os.path.join(unpack_dir, "BOOTABLE_IMAGES")
+  prebuilt_path = os.path.join(prebuilt_dir, prebuilt_name)
+  custom_bootimg_mk = os.getenv('MKBOOTIMG')
+  if custom_bootimg_mk:
+    bootimage_path = os.path.join(os.getenv('OUT'), "boot.img")
+    if not os.path.exists(prebuilt_dir):
+      os.mkdir(prebuilt_dir)
+    shutil.copyfile(bootimage_path, prebuilt_path)
   if os.path.exists(prebuilt_path):
     print "using prebuilt %s from BOOTABLE_IMAGES..." % (prebuilt_name,)
     return File.FromLocalFile(name, prebuilt_path)
@@ -1336,14 +1343,16 @@ DataImage = blockimgdiff.DataImage
 
 
 # map recovery.fstab's fs_types to mount/format "partition types"
-PARTITION_TYPES = {
-    "yaffs2": "MTD",
-    "mtd": "MTD",
-    "ext4": "EMMC",
-    "emmc": "EMMC",
-    "f2fs": "EMMC",
-    "squashfs": "EMMC"
-}
+PARTITION_TYPES = { "bml": "BML",
+                    "ext2": "EMMC",
+                    "ext3": "EMMC",
+                    "ext4": "EMMC",
+                    "emmc": "EMMC",
+                    "mtd": "MTD",
+                    "f2fs": "EMMC",
+                    "yaffs2": "MTD",
+                    "vfat": "EMMC",
+                    "squashfs": "EMMC" }
 
 def GetTypeAndDevice(mount_point, info):
   fstab = info["fstab"]
@@ -1423,18 +1432,28 @@ fi
        'bonus_args': bonus_args}
 
   # The install script location moved from /system/etc to /system/bin
-  # in the L release.  Parse the init.rc file to find out where the
+  # in the L release.  Parse init.*.rc files to find out where the
   # target-files expects it to be, and put it there.
   sh_location = "etc/install-recovery.sh"
-  try:
-    with open(os.path.join(input_dir, "BOOT", "RAMDISK", "init.rc")) as f:
+  found = False
+  init_rc_dir = os.path.join(input_dir, "BOOT", "RAMDISK")
+  init_rc_files = os.listdir(init_rc_dir)
+  for init_rc_file in init_rc_files:
+    if (not init_rc_file.startswith('init.') or
+        not init_rc_file.endswith('.rc')):
+      continue
+
+    with open(os.path.join(init_rc_dir, init_rc_file)) as f:
       for line in f:
         m = re.match(r"^service flash_recovery /system/(\S+)\s*$", line)
         if m:
           sh_location = m.group(1)
-          print "putting script in", sh_location
+          found = True
           break
-  except (OSError, IOError) as e:
-    print "failed to read init.rc: %s" % (e,)
+
+    if found:
+      break
+
+  print "putting script in", sh_location
 
   output_sink(sh_location, sh)

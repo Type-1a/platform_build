@@ -41,12 +41,9 @@ SRC_HEADERS := \
 	$(TOPDIR)system/media/audio/include \
 	$(TOPDIR)hardware/libhardware/include \
 	$(TOPDIR)hardware/libhardware_legacy/include \
-	$(TOPDIR)hardware/ril/include \
 	$(TOPDIR)libnativehelper/include \
-	$(TOPDIR)frameworks/native/include \
-	$(TOPDIR)frameworks/native/opengl/include \
-	$(TOPDIR)frameworks/av/include \
 	$(TOPDIR)frameworks/base/include
+
 SRC_HOST_HEADERS:=$(TOPDIR)tools/include
 SRC_LIBRARIES:= $(TOPDIR)libs
 SRC_SERVERS:= $(TOPDIR)servers
@@ -401,7 +398,11 @@ AIDL := $(HOST_OUT_EXECUTABLES)/aidl$(HOST_EXECUTABLE_SUFFIX)
 PROTOC := $(HOST_OUT_EXECUTABLES)/aprotoc$(HOST_EXECUTABLE_SUFFIX)
 SIGNAPK_JAR := $(HOST_OUT_JAVA_LIBRARIES)/signapk$(COMMON_JAVA_PACKAGE_SUFFIX)
 MKBOOTFS := $(HOST_OUT_EXECUTABLES)/mkbootfs$(HOST_EXECUTABLE_SUFFIX)
+ifeq ($(BOARD_NEEDS_LZMA_MINIGZIP),true)
+MINIGZIP := /usr/bin/lzma
+else
 MINIGZIP := $(HOST_OUT_EXECUTABLES)/minigzip$(HOST_EXECUTABLE_SUFFIX)
+endif
 ifeq (,$(strip $(BOARD_CUSTOM_MKBOOTIMG)))
 MKBOOTIMG := $(HOST_OUT_EXECUTABLES)/mkbootimg$(HOST_EXECUTABLE_SUFFIX)
 else
@@ -523,6 +524,18 @@ else
 MD5SUM:=md5sum
 endif
 
+# In-place sed is done different in linux than OS X
+ifeq ($(HOST_OS),darwin)
+GSED:=$(shell which gsed)
+ifeq ($(GSED),)
+SED_INPLACE:=sed -i ''
+else
+SED_INPLACE:=gsed -i
+endif
+else
+SED_INPLACE:=sed -i
+endif
+
 APICHECK_CLASSPATH := $(HOST_JDK_TOOLS_JAR)
 APICHECK_CLASSPATH := $(APICHECK_CLASSPATH):$(HOST_OUT_JAVA_LIBRARIES)/doclava$(COMMON_JAVA_PACKAGE_SUFFIX)
 APICHECK_CLASSPATH := $(APICHECK_CLASSPATH):$(HOST_OUT_JAVA_LIBRARIES)/jsilver$(COMMON_JAVA_PACKAGE_SUFFIX)
@@ -534,6 +547,9 @@ ifdef PRODUCT_DEFAULT_DEV_CERTIFICATE
 else
   DEFAULT_SYSTEM_DEV_CERTIFICATE := build/target/product/security/testkey
 endif
+
+# Rules for QCOM targets
+include $(BUILD_SYSTEM)/qcom_target.mk
 
 # ###############################################################
 # Set up final options.
@@ -554,10 +570,34 @@ TARGET_RELEASE_CPPFLAGS += $(COMMON_RELEASE_CPPFLAGS)
 HOST_GLOBAL_LD_DIRS += -L$(HOST_OUT_INTERMEDIATE_LIBRARIES)
 TARGET_GLOBAL_LD_DIRS += -L$(TARGET_OUT_INTERMEDIATE_LIBRARIES)
 
-HOST_PROJECT_INCLUDES:= $(SRC_HEADERS) $(SRC_HOST_HEADERS) $(HOST_OUT_HEADERS)
+ifeq ($(BOARD_USES_QCOM_HARDWARE),true)
+TARGET_AV_HEADERS := \
+        $(TOPDIR)frameworks/av-caf/include
+TARGET_NATIVE_HEADERS := \
+        $(TOPDIR)frameworks/native-caf/include \
+        $(TOPDIR)frameworks/native-caf/opengl/include
+else
+TARGET_AV_HEADERS := \
+        $(TOPDIR)frameworks/av/include
+TARGET_NATIVE_HEADERS := \
+        $(TOPDIR)frameworks/native/include \
+        $(TOPDIR)frameworks/native/opengl/include
+endif
+
+ifeq ($(TARGET_RIL_VARIANT),caf)
+TARGET_RIL_HEADERS := $(TOPDIR)hardware/ril-caf/include
+else
+TARGET_RIL_HEADERS := $(TOPDIR)hardware/ril/include
+endif
+
+HOST_PROJECT_INCLUDES:= $(SRC_HEADERS) $(SRC_HOST_HEADERS) $(HOST_OUT_HEADERS) \
+		$(TARGET_AV_HEADERS) $(TARGET_NATIVE_HEADERS)
+
 TARGET_PROJECT_INCLUDES:= $(SRC_HEADERS) $(TARGET_OUT_HEADERS) \
 		$(TARGET_DEVICE_KERNEL_HEADERS) $(TARGET_BOARD_KERNEL_HEADERS) \
-		$(TARGET_PRODUCT_KERNEL_HEADERS)
+		$(TARGET_PRODUCT_KERNEL_HEADERS) $(TARGET_AV_HEADERS) $(TARGET_NATIVE_HEADERS) \
+		$(TARGET_RIL_HEADERS)
+
 
 # Many host compilers don't support these flags, so we have to make
 # sure to only specify them for the target compilers checked in to
@@ -685,5 +725,11 @@ endif
 # API Level lists for Renderscript Compat lib.
 RSCOMPAT_32BIT_ONLY_API_LEVELS := 8 9 10 11 12 13 14 15 16 17 18 19 20
 RSCOMPAT_NO_USAGEIO_API_LEVELS := 8 9 10 11 12 13
+
+ifneq ($(CUSTOM_BUILD),)
+## We need to be sure the global selinux policies are included
+## last, to avoid accidental resetting by device configs
+$(eval include vendor/omni/sepolicy/sepolicy.mk)
+endif
 
 include $(BUILD_SYSTEM)/dumpvar.mk

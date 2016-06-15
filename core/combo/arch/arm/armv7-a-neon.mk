@@ -2,6 +2,7 @@
 # Generating binaries for the ARMv7-a architecture and higher with NEON
 #
 ARCH_ARM_HAVE_ARMV7A            := true
+ARCH_ARM_HAVE_TLS_REGISTER      := true
 ARCH_ARM_HAVE_VFP               := true
 ARCH_ARM_HAVE_VFP_D32           := true
 ARCH_ARM_HAVE_NEON              := true
@@ -29,10 +30,22 @@ ifeq ($(strip $(TARGET_$(combo_2nd_arch_prefix)CPU_VARIANT)),cortex-a7)
 	arch_variant_ldflags := \
 		-Wl,--no-fix-cortex-a8
 else
+ifeq ($(strip $(TARGET_CPU_VARIANT)),cortex-a5)
+	arch_variant_cflags := -mcpu=cortex-a5
+else
+ifeq ($(strip $(TARGET_CPU_VARIANT)),krait)
+	arch_variant_cflags := -mcpu=cortex-a9
+else
+ifeq ($(strip $(TARGET_CPU_VARIANT)),scorpion)
+	arch_variant_cflags := -mcpu=cortex-a8
+else
 	arch_variant_cflags := -march=armv7-a
 	# Generic ARM might be a Cortex A8 -- better safe than sorry
 	arch_variant_ldflags := \
 		-Wl,--fix-cortex-a8
+endif
+endif
+endif
 endif
 endif
 endif
