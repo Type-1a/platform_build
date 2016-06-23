@@ -207,7 +207,7 @@ def parse_device_from_folder(device):
 
 
 def parse_dependency_file(location):
-    dep_file = "type-1a.dependencies"
+    dep_file = "type1a.dependencies"
     dep_location = '/'.join([location, dep_file])
     if not os.path.isfile(dep_location):
         print("WARNING: %s file not found" % dep_location)
@@ -268,7 +268,7 @@ def create_dependency_manifest(dependencies):
 
 
 def create_common_dependencies_manifest(dependencies):
-    dep_file = "type-1a.dependencies"
+    dep_file = "type1a.dependencies"
     common_list = []
     if dependencies is not None:
         for dependency in dependencies:
