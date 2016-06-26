@@ -58,6 +58,6 @@ fi
 echo "ro.build.characteristics=$TARGET_AAPT_CHARACTERISTICS"
 
 # Type-1a properties
-echo "ro.type-1a.device=$TYPE-1A_DEVICE"
+echo "ro.type1a.device=$TYPE1A_DEVICE"
 
 echo "# end build properties"
